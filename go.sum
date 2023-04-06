@@ -1,0 +1,8 @@
+github.com/TelephoneTan/GoPromise v0.0.0-20230331012624-d62658125af3 h1:UO+ZxxPxANCwPp4OqWC5W+Q/xTHTxJWBQqmWNZcbjzQ=
+github.com/TelephoneTan/GoPromise v0.0.0-20230331012624-d62658125af3/go.mod h1:IjMGu/dnOxiP5rew7E8neJFawkZpk2zW+mkt14mwekI=
+github.com/TelephoneTan/GoPromise v0.0.0-20230331061804-04371be502e4 h1:maFn2gsc4GBNFwiSJS4cvDXr9EyJ9qGLBx2uYEgdZrI=
+github.com/TelephoneTan/GoPromise v0.0.0-20230331061804-04371be502e4/go.mod h1:IjMGu/dnOxiP5rew7E8neJFawkZpk2zW+mkt14mwekI=
+golang.org/x/net v0.8.0 h1:Zrh2ngAOFYneWTAIAPethzeaQLuHwhuBkuV6ZiRnUaQ=
+golang.org/x/net v0.8.0/go.mod h1:QVkue5JL9kW//ek3r6jTKnTFis1tRmNAW2P1shuFdJc=
+golang.org/x/text v0.8.0 h1:57P1ETyNKtuIjB4SRd15iJxuhj8Gc416Y78H3qgMh68=
+golang.org/x/text v0.8.0/go.mod h1:e1OnstbJyHTd6l/uOt8jFFHp6TRDWZR/bV3emEE/zU8=
