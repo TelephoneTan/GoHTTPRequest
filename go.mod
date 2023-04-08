@@ -1,4 +1,4 @@
-module GoHTTPRequest
+module github.com/TelephoneTan/GoHTTPRequest
 
 go 1.20
 

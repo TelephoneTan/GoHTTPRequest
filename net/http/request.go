@@ -1,15 +1,15 @@
 package http
 
 import (
-	"GoHTTPRequest/net"
-	"GoHTTPRequest/net/http/header"
-	"GoHTTPRequest/net/http/method"
-	"GoHTTPRequest/net/mime"
-	"GoHTTPRequest/util"
 	"bytes"
 	"context"
 	"encoding/base64"
 	"encoding/json"
+	"github.com/TelephoneTan/GoHTTPRequest/net"
+	"github.com/TelephoneTan/GoHTTPRequest/net/http/header"
+	"github.com/TelephoneTan/GoHTTPRequest/net/http/method"
+	"github.com/TelephoneTan/GoHTTPRequest/net/mime"
+	"github.com/TelephoneTan/GoHTTPRequest/util"
 	"github.com/TelephoneTan/GoPromise/async/promise"
 	"github.com/TelephoneTan/GoPromise/async/task"
 	"golang.org/x/net/html"

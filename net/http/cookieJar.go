@@ -1,7 +1,7 @@
 package http
 
 import (
-	"GoHTTPRequest/util"
+	"github.com/TelephoneTan/GoHTTPRequest/util"
 	"golang.org/x/net/publicsuffix"
 	"net/http"
 	"net/http/cookiejar"
