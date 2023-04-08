@@ -642,6 +642,10 @@ func (r Request) Send() *promise.Promise[Result[any]] {
 	return r.send.Do()
 }
 
+func (r Request) ByteSlice() *promise.Promise[Result[[]byte]] {
+	return r.byteSlice.Do()
+}
+
 func (r Request) String() *promise.Promise[Result[string]] {
 	return r.string.Do()
 }
