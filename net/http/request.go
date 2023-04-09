@@ -150,7 +150,7 @@ func (h *HeaderMap) MarshalJSON() ([]byte, error) {
 }
 
 type _Request struct {
-	RequestSemaphore         *promise.Semaphore `json:"-"`
+	RequestSemaphore         promise.Semaphore `json:"-"`
 	Method                   *method.Method
 	URL                      string
 	CustomizedHeaderList     [][]string
@@ -187,12 +187,12 @@ type _Request struct {
 	//
 	context *atomic.Pointer[ctxPack]
 	//
-	stream       *task.Once[Result[Stream]]
-	send         *task.Once[Result[any]]
-	byteSlice    *task.Once[Result[[]byte]]
-	string       *task.Once[Result[string]]
-	json         *task.Once[Result[any]]
-	htmlDocument *task.Once[Result[*html.Node]]
+	stream       task.Once[Result[Stream]]
+	send         task.Once[Result[any]]
+	byteSlice    task.Once[Result[[]byte]]
+	string       task.Once[Result[string]]
+	json         task.Once[Result[any]]
+	htmlDocument task.Once[Result[*html.Node]]
 }
 
 type Request = *_Request
@@ -398,7 +398,7 @@ func (r Request) GetHeader(name string) []string {
 	return nil
 }
 
-func (r Request) stringTask(defaultCharset string) *task.Once[Result[string]] {
+func (r Request) stringTask(defaultCharset string) task.Once[Result[string]] {
 	return task.NewOnceTask(promise.Job[Result[string]]{
 		Do: func(rs promise.Resolver[Result[string]], re promise.Rejector) {
 			rs.ResolvePromise(promise.Then(r.byteSlice.Do(), promise.FulfilledListener[Result[[]byte], Result[string]]{
@@ -429,10 +429,10 @@ func (r Request) stringTask(defaultCharset string) *task.Once[Result[string]] {
 	})
 }
 
-func (r Request) htmlTask(defaultCharset string) *task.Once[Result[*html.Node]] {
+func (r Request) htmlTask(defaultCharset string) task.Once[Result[*html.Node]] {
 	return task.NewOnceTask(promise.Job[Result[*html.Node]]{
 		Do: func(rs promise.Resolver[Result[*html.Node]], re promise.Rejector) {
-			var strPromise *promise.Promise[Result[string]]
+			var strPromise promise.Promise[Result[string]]
 			if defaultCharset == "" {
 				strPromise = r.String()
 			} else {
@@ -634,34 +634,34 @@ func (r Request) Deserialize(s string) Request {
 	return r
 }
 
-func (r Request) Stream() *promise.Promise[Result[Stream]] {
+func (r Request) Stream() promise.Promise[Result[Stream]] {
 	return r.stream.Do()
 }
 
-func (r Request) Send() *promise.Promise[Result[any]] {
+func (r Request) Send() promise.Promise[Result[any]] {
 	return r.send.Do()
 }
 
-func (r Request) ByteSlice() *promise.Promise[Result[[]byte]] {
+func (r Request) ByteSlice() promise.Promise[Result[[]byte]] {
 	return r.byteSlice.Do()
 }
 
-func (r Request) String() *promise.Promise[Result[string]] {
+func (r Request) String() promise.Promise[Result[string]] {
 	return r.string.Do()
 }
 
-func (r Request) StringWithCharset(charset string) *promise.Promise[Result[string]] {
+func (r Request) StringWithCharset(charset string) promise.Promise[Result[string]] {
 	return r.stringTask(charset).Do()
 }
 
-func (r Request) Json() *promise.Promise[Result[any]] {
+func (r Request) Json() promise.Promise[Result[any]] {
 	return r.json.Do()
 }
 
-func (r Request) HTMLDocument() *promise.Promise[Result[*html.Node]] {
+func (r Request) HTMLDocument() promise.Promise[Result[*html.Node]] {
 	return r.htmlDocument.Do()
 }
 
-func (r Request) HTMLDocumentWithCharset(charset string) *promise.Promise[Result[*html.Node]] {
+func (r Request) HTMLDocumentWithCharset(charset string) promise.Promise[Result[*html.Node]] {
 	return r.htmlTask(charset).Do()
 }

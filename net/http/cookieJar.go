@@ -8,16 +8,18 @@ import (
 	"net/url"
 )
 
-type CookieJar struct {
+type _CookieJar struct {
 	Jar      http.CookieJar
 	Readable bool
 	Writable bool
 	Tag      string
 }
 
-func (c *CookieJar) SameTag(tag string) (res FlexibleCookieJar) {
+type CookieJar = *_CookieJar
+
+func (c CookieJar) SameTag(tag string) (res FlexibleCookieJar) {
 	if tag != c.Tag {
-		res = util.Copy(*c, func(c *CookieJar) {
+		res = util.Copy(*c, func(c CookieJar) {
 			c.Tag = tag
 			c.Jar = newJar()
 		})
@@ -27,56 +29,56 @@ func (c *CookieJar) SameTag(tag string) (res FlexibleCookieJar) {
 	return res
 }
 
-func (c *CookieJar) SetCookies(u *url.URL, cookies []*http.Cookie) {
+func (c CookieJar) SetCookies(u *url.URL, cookies []*http.Cookie) {
 	if !c.Writable {
 		return
 	}
 	c.Jar.SetCookies(u, cookies)
 }
 
-func (c *CookieJar) Cookies(u *url.URL) []*http.Cookie {
+func (c CookieJar) Cookies(u *url.URL) []*http.Cookie {
 	if !c.Readable {
 		return []*http.Cookie{}
 	}
 	return c.Jar.Cookies(u)
 }
 
-func (c *CookieJar) require(readable, writable bool) *CookieJar {
+func (c CookieJar) require(readable, writable bool) CookieJar {
 	if c.Readable == readable && c.Writable == writable {
 		return c
 	} else {
-		return util.Copy(*c, func(c *CookieJar) {
+		return util.Copy(*c, func(c CookieJar) {
 			c.Readable = readable
 			c.Writable = writable
 		})
 	}
 }
 
-func (c *CookieJar) AsReadOnlyJar() FlexibleCookieJar {
+func (c CookieJar) AsReadOnlyJar() FlexibleCookieJar {
 	return c.require(true, false)
 }
 
-func (c *CookieJar) AsWriteOnlyJar() FlexibleCookieJar {
+func (c CookieJar) AsWriteOnlyJar() FlexibleCookieJar {
 	return c.require(false, true)
 }
 
-func (c *CookieJar) AsReadWriteJar() FlexibleCookieJar {
+func (c CookieJar) AsReadWriteJar() FlexibleCookieJar {
 	return c.require(true, true)
 }
 
-func (c *CookieJar) AsNoJar() FlexibleCookieJar {
+func (c CookieJar) AsNoJar() FlexibleCookieJar {
 	return c.require(false, false)
 }
 
-func (c *CookieJar) WithRead(readable bool) FlexibleCookieJar {
+func (c CookieJar) WithRead(readable bool) FlexibleCookieJar {
 	return c.require(readable, c.Writable)
 }
 
-func (c *CookieJar) WithWrite(writable bool) FlexibleCookieJar {
+func (c CookieJar) WithWrite(writable bool) FlexibleCookieJar {
 	return c.require(c.Readable, writable)
 }
 
-func (c *CookieJar) WithReadWrite(readable, writable bool) FlexibleCookieJar {
+func (c CookieJar) WithReadWrite(readable, writable bool) FlexibleCookieJar {
 	return c.require(readable, writable)
 }
 
@@ -85,11 +87,11 @@ func newJar() http.CookieJar {
 	return jar
 }
 
-func NewCookieJar(jar http.CookieJar, init ...func(*CookieJar)) *CookieJar {
+func NewCookieJar(jar http.CookieJar, init ...func(CookieJar)) CookieJar {
 	if jar == nil {
 		jar = newJar()
 	}
-	return util.New(&CookieJar{
+	return util.New(&_CookieJar{
 		Jar:      jar,
 		Readable: true,
 		Writable: true,
