@@ -12,4 +12,5 @@ type FlexibleCookieJar interface {
 	WithWrite(writable bool) FlexibleCookieJar
 	WithReadWrite(readable, writable bool) FlexibleCookieJar
 	SameTag(tag string) FlexibleCookieJar
+	Clear() FlexibleCookieJar
 }

@@ -6,6 +6,9 @@ import (
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
+	"sync"
+	"sync/atomic"
+	"time"
 )
 
 type _CookieJar struct {
@@ -17,11 +20,17 @@ type _CookieJar struct {
 
 type CookieJar = *_CookieJar
 
+func (c CookieJar) Clear() FlexibleCookieJar {
+	return util.Copy(*c, func(c CookieJar) {
+		c.Jar = selectJar(c.Tag, true)
+	})
+}
+
 func (c CookieJar) SameTag(tag string) (res FlexibleCookieJar) {
 	if tag != c.Tag {
 		res = util.Copy(*c, func(c CookieJar) {
 			c.Tag = tag
-			c.Jar = newJar()
+			c.Jar = selectJar(tag, false)
 		})
 	} else {
 		res = c
@@ -82,18 +91,56 @@ func (c CookieJar) WithReadWrite(readable, writable bool) FlexibleCookieJar {
 	return c.require(readable, writable)
 }
 
-func newJar() http.CookieJar {
-	jar, _ := cookiejar.New(&cookiejar.Options{PublicSuffixList: publicsuffix.List})
+type _timeJar struct {
+	lastAccessSecond atomic.Int64
+	jar              http.CookieJar
+}
+type timeJar = *_timeJar
+
+func (t timeJar) SetCookies(u *url.URL, cookies []*http.Cookie) {
+	t.lastAccessSecond.Store(time.Now().Unix())
+	t.jar.SetCookies(u, cookies)
+}
+
+func (t timeJar) Cookies(u *url.URL) []*http.Cookie {
+	t.lastAccessSecond.Store(time.Now().Unix())
+	return t.jar.Cookies(u)
+}
+
+var jarMap = map[string]timeJar{}
+var jarMapLock = sync.Mutex{}
+
+func cleanJarMap() {
+	nowSecond := time.Now().Unix()
+	for tag, jar := range jarMap {
+		if nowSecond-jar.lastAccessSecond.Load() > 300 {
+			delete(jarMap, tag)
+		}
+	}
+}
+
+func selectJar(tag string, clear bool) http.CookieJar {
+	jarMapLock.Lock()
+	defer jarMapLock.Unlock()
+	if _, has := jarMap[tag]; !has {
+		jarMap[tag] = &_timeJar{}
+	}
+	jar := jarMap[tag]
+	jar.lastAccessSecond.Store(time.Now().Unix())
+	if jar.jar == nil || clear {
+		jar.jar, _ = cookiejar.New(&cookiejar.Options{PublicSuffixList: publicsuffix.List})
+	}
+	if len(jarMap) > 10_0000 {
+		cleanJarMap()
+	}
 	return jar
 }
 
-func NewCookieJar(jar http.CookieJar, init ...func(CookieJar)) CookieJar {
-	if jar == nil {
-		jar = newJar()
-	}
+func NewCookieJar(tag string, init ...func(CookieJar)) CookieJar {
 	return util.New(&_CookieJar{
-		Jar:      jar,
+		Jar:      selectJar(tag, false),
 		Readable: true,
 		Writable: true,
+		Tag:      tag,
 	}, init...)
 }
