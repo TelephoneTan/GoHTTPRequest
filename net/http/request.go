@@ -32,6 +32,7 @@ var (
 	defaultReadTimeout    = Duration(20 * time.Second)
 	defaultWriteTimeout   = Duration(20 * time.Second)
 	quickTestTimeout      = Duration(500 * time.Millisecond)
+	defaultCookieJarTag   = ""
 )
 
 type Stream struct {
@@ -168,6 +169,7 @@ type _Request struct {
 	IsQuickTest              *bool
 	FollowRedirect           *bool
 	CookieJar                FlexibleCookieJar `json:"-"`
+	CookieJarTag             *string
 	AutoSendCookies          *bool
 	AutoReceiveCookies       *bool
 	Proxy                    *net.Proxy
@@ -329,6 +331,11 @@ func (r Request) generateCookieJar() FlexibleCookieJar {
 			r.CookieJar = r.CookieJar.WithRead(*r.AutoSendCookies)
 		} else if r.AutoReceiveCookies != nil {
 			r.CookieJar = r.CookieJar.WithWrite(*r.AutoReceiveCookies)
+		}
+		if r.CookieJarTag == nil {
+			r.CookieJar = r.CookieJar.SameTag(defaultCookieJarTag)
+		} else {
+			r.CookieJar = r.CookieJar.SameTag(*r.CookieJarTag)
 		}
 	}
 	return r.CookieJar
