@@ -403,7 +403,7 @@ func (r Request) getContext() *ctxPack {
 	}
 }
 
-func (r Request) GetHeader(name string) []string {
+func (r Request) GetResponseHeader(name string) []string {
 	for n, vs := range r.ResponseHeaderMap {
 		if strings.EqualFold(n, name) {
 			return vs
@@ -412,13 +412,23 @@ func (r Request) GetHeader(name string) []string {
 	return nil
 }
 
+func (r Request) GetFirstResponseHeader(name string) *string {
+	hs := r.GetResponseHeader(name)
+	if len(hs) > 0 {
+		s := hs[0]
+		return &s
+	} else {
+		return nil
+	}
+}
+
 func (r Request) stringTask(defaultCharset string) task.Once[Result[string]] {
 	return task.NewOnceTask(promise.Job[Result[string]]{
 		Do: func(rs promise.Resolver[Result[string]], re promise.Rejector) {
 			rs.ResolvePromise(promise.Then(r.byteSlice.Do(), promise.FulfilledListener[Result[[]byte], Result[string]]{
 				OnFulfilled: func(bsRes Result[[]byte]) any {
 					var ct string
-					if headers := bsRes.Request.GetHeader(header.ContentType); len(headers) > 0 {
+					if headers := bsRes.Request.GetResponseHeader(header.ContentType); len(headers) > 0 {
 						ct = headers[0]
 					}
 					if ct == "" {
