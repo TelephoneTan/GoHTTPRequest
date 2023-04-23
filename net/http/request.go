@@ -90,7 +90,7 @@ func (d *Duration) UnmarshalJSON(bs []byte) error {
 	if ms == nil {
 		return nil
 	} else {
-		*d = Duration(*ms)
+		*d = Duration(time.Duration(*ms) * time.Millisecond)
 		return nil
 	}
 }
