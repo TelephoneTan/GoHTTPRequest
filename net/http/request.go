@@ -32,7 +32,6 @@ var (
 	defaultReadTimeout    = Duration(20 * time.Second)
 	defaultWriteTimeout   = Duration(20 * time.Second)
 	quickTestTimeout      = Duration(500 * time.Millisecond)
-	defaultCookieJarTag   = ""
 )
 
 type Stream struct {
@@ -325,25 +324,25 @@ func (r Request) generateTimeout() {
 }
 
 func (r Request) generateCookieJar() FlexibleCookieJar {
-	if r.CookieJar != nil {
-		//
-		if r.CookieJarTag == nil {
-			r.CookieJar = r.CookieJar.SameTag(defaultCookieJarTag)
-		} else {
-			r.CookieJar = r.CookieJar.SameTag(*r.CookieJarTag)
-		}
-		//
-		if r.AutoSendCookies != nil && r.AutoReceiveCookies != nil {
-			r.CookieJar = r.CookieJar.WithReadWrite(*r.AutoSendCookies, *r.AutoReceiveCookies)
-		} else if r.AutoSendCookies != nil {
-			r.CookieJar = r.CookieJar.WithRead(*r.AutoSendCookies)
-		} else if r.AutoReceiveCookies != nil {
-			r.CookieJar = r.CookieJar.WithWrite(*r.AutoReceiveCookies)
-		}
-		//
-		if r.ClearCookieJar != nil && *r.ClearCookieJar {
-			r.CookieJar = r.CookieJar.Clear()
-		}
+	if r.CookieJar == nil && r.CookieJarTag == nil {
+		return nil
+	}
+	if r.CookieJar == nil {
+		r.CookieJar = NewCookieJar(*r.CookieJarTag)
+	} else if r.CookieJarTag != nil {
+		r.CookieJar = r.CookieJar.SameTag(*r.CookieJarTag)
+	}
+	//
+	if r.AutoSendCookies != nil && r.AutoReceiveCookies != nil {
+		r.CookieJar = r.CookieJar.WithReadWrite(*r.AutoSendCookies, *r.AutoReceiveCookies)
+	} else if r.AutoSendCookies != nil {
+		r.CookieJar = r.CookieJar.WithRead(*r.AutoSendCookies)
+	} else if r.AutoReceiveCookies != nil {
+		r.CookieJar = r.CookieJar.WithWrite(*r.AutoReceiveCookies)
+	}
+	//
+	if r.ClearCookieJar != nil && *r.ClearCookieJar {
+		r.CookieJar = r.CookieJar.Clear()
 	}
 	return r.CookieJar
 }
