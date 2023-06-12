@@ -13,4 +13,5 @@ type FlexibleCookieJar interface {
 	WithReadWrite(readable, writable bool) FlexibleCookieJar
 	SameTag(tag string) FlexibleCookieJar
 	Clear() FlexibleCookieJar
+	SetCookiesManually(urlCookieList [][]string)
 }

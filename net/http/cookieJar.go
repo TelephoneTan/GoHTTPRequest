@@ -91,6 +91,34 @@ func (c CookieJar) WithReadWrite(readable, writable bool) FlexibleCookieJar {
 	return c.require(readable, writable)
 }
 
+func (c CookieJar) SetCookiesManually(urlCookieList [][]string) {
+	toSet := map[string][]*http.Cookie{}
+	for _, urlCookie := range urlCookieList {
+		u := ""
+		cookie := ""
+		if len(urlCookie) > 0 {
+			u = urlCookie[0]
+			if len(urlCookie) > 1 {
+				cookie = urlCookie[1]
+			}
+		}
+		_, err := url.Parse(u)
+		if err == nil {
+			header := http.Header{}
+			header.Set("Set-Cookie", cookie)
+			response := http.Response{Header: header}
+			cookies := response.Cookies()
+			if len(cookies) > 0 {
+				toSet[u] = append(toSet[u], cookies[0])
+			}
+		}
+	}
+	for u, cookies := range toSet {
+		uu, _ := url.Parse(u)
+		c.SetCookies(uu, cookies)
+	}
+}
+
 type _timeJar struct {
 	lastAccessSecond atomic.Int64
 	jar              http.CookieJar
