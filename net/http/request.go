@@ -172,6 +172,7 @@ type _Request struct {
 	AutoSendCookies          *bool
 	AutoReceiveCookies       *bool
 	ClearCookieJar           *bool
+	SetCookies               [][]string
 	Proxy                    *net.Proxy
 	//
 	StatusCode         int
@@ -344,6 +345,8 @@ func (r Request) generateCookieJar() FlexibleCookieJar {
 	if r.ClearCookieJar != nil && *r.ClearCookieJar {
 		r.CookieJar = r.CookieJar.Clear()
 	}
+	//
+	r.CookieJar.SetCookiesManually(r.SetCookies)
 	return r.CookieJar
 }
 
@@ -643,6 +646,14 @@ func (r Request) Clone() Request {
 		}
 		if clone.RequestBinary != nil {
 			clone.RequestBinary = append([]byte{}, clone.RequestBinary...)
+		}
+		if clone.SetCookies != nil {
+			clone.SetCookies = append([][]string{}, clone.SetCookies...)
+			for i, kv := range clone.SetCookies {
+				if kv != nil {
+					clone.SetCookies[i] = append([]string{}, kv...)
+				}
+			}
 		}
 	})
 }
