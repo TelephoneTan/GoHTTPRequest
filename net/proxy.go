@@ -5,6 +5,15 @@ import (
 	"strconv"
 )
 
+const (
+	HTTP  = "HTTP"
+	SOCKS = "SOCKS"
+)
+
+func Port(port int) *int {
+	return &port
+}
+
 type Proxy struct {
 	Type string
 	Host string
@@ -17,9 +26,9 @@ func (p *Proxy) URL() *url.URL {
 	}
 	t := p.Type
 	switch t {
-	case "SOCKS":
+	case SOCKS:
 		t = "socks5"
-	case "HTTP":
+	case HTTP:
 		t = "http"
 	default:
 		return nil

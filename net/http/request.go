@@ -14,6 +14,7 @@ import (
 	"github.com/TelephoneTan/GoPromise/async/task"
 	"golang.org/x/net/html"
 	"golang.org/x/net/html/charset"
+	"golang.org/x/net/idna"
 	"io"
 	"net/http"
 	"net/url"
@@ -152,7 +153,9 @@ func (h *HeaderMap) MarshalJSON() ([]byte, error) {
 type _Request struct {
 	RequestSemaphore         promise.Semaphore `json:"-"`
 	Method                   *method.Method
-	URL                      string
+	URL                      string `json:"-"`
+	EncodedURL               string `json:"URL"`
+	URI                      string `json:"-"`
 	CustomizedHeaderList     [][]string
 	RequestBinary            Binary
 	RequestForm              [][]string
@@ -208,6 +211,38 @@ func (r Request) calContentType() string {
 		return string(*r.RequestContentType)
 	}
 	return r.RequestContentTypeHeader
+}
+
+func (r Request) encodedURL() string {
+	var urlStr string
+	if r.URI != "" {
+		urlStr = r.URI
+	} else {
+		u, err := url.Parse(r.URL)
+		if err != nil {
+			panic(err)
+		}
+		{
+			host := u.Hostname()
+			host = strings.ReplaceAll(host, "\u002e", ".")
+			host = strings.ReplaceAll(host, "\u3002", ".")
+			host = strings.ReplaceAll(host, "\uff0e", ".")
+			host = strings.ReplaceAll(host, "\uff61", ".")
+			host, err := idna.ToASCII(host)
+			if err != nil {
+				panic(err)
+			}
+			port := u.Port()
+			if port != "" {
+				host += ":" + port
+			}
+			u.Host = host
+		}
+		u.RawQuery = strings.ReplaceAll(u.RawQuery, "+", "%2b")
+		u.RawQuery = strings.ReplaceAll(u.Query().Encode(), "+", "%20")
+		urlStr = u.String()
+	}
+	return strings.ReplaceAll(urlStr, "+", "%2b")
 }
 
 func (r Request) generateRequestBody() io.Reader {
@@ -266,7 +301,7 @@ func (r Request) generateRequestBody() io.Reader {
 
 func (r Request) generateRequestMethod() string {
 	if r.Method == nil {
-		r.Method = &method.GET
+		r.Method = method.GET
 	}
 	return string(*r.Method)
 }
@@ -495,7 +530,7 @@ func (r Request) init() Request {
 				}
 			}()
 			//
-			request, err := http.NewRequestWithContext(ctx.ctx, r.generateRequestMethod(), r.URL, r.generateRequestBody())
+			request, err := http.NewRequestWithContext(ctx.ctx, r.generateRequestMethod(), r.encodedURL(), r.generateRequestBody())
 			if err != nil {
 				panic(err)
 			}
@@ -659,12 +694,14 @@ func (r Request) Clone() Request {
 }
 
 func (r Request) Serialize() string {
+	r.EncodedURL = r.encodedURL()
 	bs, _ := json.Marshal(r)
 	return string(bs)
 }
 
 func (r Request) Deserialize(s string) Request {
 	_ = json.Unmarshal([]byte(s), r)
+	r.URI = r.EncodedURL
 	return r
 }
 
